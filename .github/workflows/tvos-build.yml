@@ -28,15 +28,9 @@ jobs:
           ninja --version
           python3 --version
 
-      - n- name: Configure tvOS
+      - name: Install dependencies
         run: |
-          PROTOC="$(brew --prefix protobuf)/bin/protoc"
-
-          echo "Host protoc: $PROTOC"
-          "$PROTOC" --version
-
-          cmake --preset tvos-default \
-            -DPROTOC_EXECUTABLE="$PROTOC"
+          brew install cmake ninja python protobuf
 
       - name: Build tvOS
         run: |
