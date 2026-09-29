@@ -1,0 +1,75 @@
+name: Build Dusklight 2.0.2 tvOS
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - tvos-2.0.2
+
+jobs:
+  build-tvos:
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout Dusklight
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: |
+          brew install cmake ninja python
+
+      - name: Show build environment
+        run: |
+          xcodebuild -version
+          cmake --version
+          ninja --version
+          python3 --version
+
+      - name: Configure tvOS
+        run: |
+          cmake --preset tvos-default
+
+      - name: Build tvOS
+        run: |
+          cmake --build --preset tvos-default
+
+      - name: Find tvOS output
+        if: always()
+        run: |
+          echo "=== APP BUNDLES ==="
+          find . -type d -name "*.app" -print || true
+
+          echo "=== DYLIBS ==="
+          find . -type f -name "*.dylib" -print || true
+
+          echo "=== BUILD DIRECTORIES ==="
+          find . -maxdepth 3 -type d -name "*tvos*" -print || true
+
+      - name: Package tvOS build
+        if: success()
+        run: |
+          mkdir -p tvos-artifact
+
+          while IFS= read -r app; do
+            echo "Found: $app"
+            cp -R "$app" tvos-artifact/
+          done < <(find . -type d -name "*.app" -prune -print)
+
+          while IFS= read -r dylib; do
+            echo "Found: $dylib"
+            cp "$dylib" tvos-artifact/ || true
+          done < <(find . -type f -name "*.dylib" -print)
+
+          echo "=== ARTIFACT CONTENTS ==="
+          find tvos-artifact -maxdepth 4 -print
+
+      - name: Upload tvOS build
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Dusklight-2.0.2-tvOS
+          path: tvos-artifact
+          if-no-files-found: error
