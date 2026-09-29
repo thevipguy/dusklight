@@ -19,7 +19,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          brew install cmake ninja python
+          brew install cmake ninja python protobuf
 
       - name: Show build environment
         run: |
@@ -28,9 +28,15 @@ jobs:
           ninja --version
           python3 --version
 
-      - name: Configure tvOS
+      - n- name: Configure tvOS
         run: |
-          cmake --preset tvos-default
+          PROTOC="$(brew --prefix protobuf)/bin/protoc"
+
+          echo "Host protoc: $PROTOC"
+          "$PROTOC" --version
+
+          cmake --preset tvos-default \
+            -DPROTOC_EXECUTABLE="$PROTOC"
 
       - name: Build tvOS
         run: |
