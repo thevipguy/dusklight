@@ -495,7 +495,15 @@ static void mods_init(const std::filesystem::path& mods_dir) {
     // mods/ next to the app, then install-bundled mods inside the app bundle.
     {
         std::vector<dusk::mods::ModSearchDir> modDirs;
+#if defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV)
+        modDirs.push_back({
+            .path = mods_dir,
+            .inPlaceNative = true,
+            .nativeLibDir = dusk::data::base_path_relative("Frameworks"),
+        });
+#else
         modDirs.push_back({.path = mods_dir});
+#endif
 #if TARGET_ANDROID
         // APK-bundled mods are extracted to internal storage
         // by DuskActivity before SDL_main runs.
@@ -1069,3 +1077,4 @@ JASAudioThread* JASGlobalInstance<JASAudioThread>::sInstance JAS_GLOBAL_INSTANCE
 template<>
 JASDefaultBankTable* JASGlobalInstance<JASDefaultBankTable>::sInstance JAS_GLOBAL_INSTANCE_INIT;
 #endif // __MWERKS__
+

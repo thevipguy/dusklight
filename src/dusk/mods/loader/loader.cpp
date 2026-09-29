@@ -172,7 +172,14 @@ LoadedMod* ModLoader::try_load_mod(const fs::path& modPath, bool fromDir, uint32
     mod.modPath = fs::absolute(modPath);
     mod.searchDirIndex = searchDirIndex;
     mod.fromDirectory = fromDir;
-    mod.nativeInPlace = m_searchDirs[searchDirIndex].inPlaceNative && fromDir;
+#if defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV)
+    mod.nativeInPlace =
+        m_searchDirs[searchDirIndex].inPlaceNative ||
+        !m_searchDirs[searchDirIndex].nativeLibDir.empty();
+#else
+    mod.nativeInPlace =
+        m_searchDirs[searchDirIndex].inPlaceNative && fromDir;
+#endif
     mod.fileIdentity = file_identity(modPath);
     mod.metadata = std::move(manifest.metadata);
     mod.runtime = std::move(manifest.runtime);
@@ -1283,3 +1290,4 @@ void ModLoader::shutdown() {
 }
 
 }  // namespace dusk::mods
+
